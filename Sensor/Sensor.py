@@ -26,6 +26,7 @@ class Sensor:
         
         self.sleep_time = sleep_t # time between readings
         self.repeat = repeat # Number of readings to take. 0 indicates continuous readings until stopped
+        self.data = []
 
     #set header for output
     def _set_header(self):
@@ -36,7 +37,8 @@ class Sensor:
         
     #take sensor reading
     def takeReading(self):
-        self.data = []
+        reading_data = []
+        return reading_data
 
     #output readings to CSV file
     def recordToFile(self):
@@ -50,13 +52,13 @@ class Sensor:
             if self.repeat == 0:
                 #continually take sensor reading, write reading to csv file, then sleep for specified interval
                 while True:
-                    self.takeReading()
+                    self.data = self.takeReading()
                     sensor_writer.writerow(self.data)
                     time.sleep(self.sleep_time)
             else:
                 #take specific number of sensor readings, then terminate
                 for i in range(self.repeat):
-                    self.takeReading()
+                    self.data = self.takeReading()
                     sensor_writer.writerow(self.data)
                     time.sleep(self.sleep_time)
 
@@ -67,11 +69,11 @@ class Sensor:
         if self.repeat == 0:
             #continually take sensor readings, print to the console, then sleep for specified interval
             while True:
-                self.takeReading()
+                self.data = self.takeReading()
                 print(self.data)
                 time.sleep(self.sleep_time)
         else:
             for i in range(self.repeat):
-                self.takeReading()
+                self.data = self.takeReading()
                 print(self.data)
                 time.sleep(self.sleep_time)
