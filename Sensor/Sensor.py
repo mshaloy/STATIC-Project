@@ -1,6 +1,6 @@
 #---------------------
 #General Sensor Class
-#Created by Mallory Shaloy
+#Created by Mallory Shaloy 03/2024
 #CCofCO RockSat-X 2024
 #---------------------
 
@@ -9,11 +9,8 @@ import time
 
 class Sensor:
 
-    #csv file header data
-    header = []
-
     #initilize the sensor, default units are Imperial, default sleep time is 1 second
-    def __init__(self, name, units="Imperial", sleep_t=1):
+    def __init__(self, name, units="Imperial", sleep_t=1, repeat=0):
         self.name = name
 
         #unit options:
@@ -23,11 +20,20 @@ class Sensor:
         #Mixed 2: fahrenheit, meters
         if units == "Imperial" or units == "Metric" or units == "Mixed 1" or units == "Mixed 2":
              self.units = units
+             self._set_header()
         else:
             raise Exception("Invalid units.")
         
-        self.sleep_time = sleep_t
+        self.sleep_time = sleep_t # time between readings
+        self.repeat = repeat # Number of readings to take. 0 indicates continuous readings until stopped
 
+    #set header for output
+    def _set_header(self):
+        if self.units == "Imperial" or self.units == "Mixed 2":
+            self.header = ["Temperature in F"]
+        else:
+            self.header = ["Temperature in C"]
+        
     #take sensor reading
     def takeReading(self):
         self.data = []
@@ -41,19 +47,31 @@ class Sensor:
             sensor_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             sensor_writer.writerow(self.header)
 
-            #continually take sensor reading, write reading to csv file, then sleep for specified interval
-            while True:
-                self.takeReading()
-                sensor_writer.writerow(self.data)
-                time.sleep(self.sleep_time)        
+            if self.repeat == 0:
+                #continually take sensor reading, write reading to csv file, then sleep for specified interval
+                while True:
+                    self.takeReading()
+                    sensor_writer.writerow(self.data)
+                    time.sleep(self.sleep_time)
+            else:
+                #take specific number of sensor readings, then terminate
+                for i in range(self.repeat):
+                    self.takeReading()
+                    sensor_writer.writerow(self.data)
+                    time.sleep(self.sleep_time)
 
     #print readings to console
     def printToConsole(self):
         print(self.name + self.units)
         print(self.header)
-
-        #continually take sensor readings, print to the console, then sleep for specified interval
-        while True:
-            self.takeReading()
-            print(self.data)
-            time.sleep(self.sleep_time)
+        if self.repeat == 0:
+            #continually take sensor readings, print to the console, then sleep for specified interval
+            while True:
+                self.takeReading()
+                print(self.data)
+                time.sleep(self.sleep_time)
+        else:
+            for i in range(self.repeat):
+                self.takeReading()
+                print(self.data)
+                time.sleep(self.sleep_time)
