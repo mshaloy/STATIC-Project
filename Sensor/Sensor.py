@@ -9,39 +9,53 @@ import time
 
 class Sensor:
 
-    #initilize the sensor, default units are Imperial, default sleep time is 1 second
-    def __init__(self, name, units="Imperial", sleep_t=1, repeat=0):
+    
+    def __init__(self, name, units="Imperial", sleep_t=1.0, repeat=0):
+        """
+        param: string name: The name of the sensor. 
+        param: string units: The units of sensor outputs. Default is Imperial.
+                             Valid options:
+                             Imperial: Fahrenheit, feet
+                             Metric: Celsius, meters
+                             Mixed 1: Celsius, feet
+                             Mixed 2: Fahrenheit, meters
+        param: float sleep_t: The amount of time between sequential sensor reads. 
+                              Default is 1 second.
+        param: int repeat: The number of times to repeat readings. 0 indicates continual readings. 
+                           Default is 0.
+        """
         self.name = name
-
-        #unit options:
-        #Imperial: fahrenheit, feet
-        #Metric: celsius, meters
-        #Mixed 1: celsius, feet
-        #Mixed 2: fahrenheit, meters
+        
+        #input validation
         if units == "Imperial" or units == "Metric" or units == "Mixed 1" or units == "Mixed 2":
              self.units = units
              self._set_header()
         else:
             raise Exception("Invalid units.")
         
-        self.sleep_time = sleep_t # time between readings
-        self.repeat = repeat # Number of readings to take. 0 indicates continuous readings until stopped
+        if sleep_t < 0:
+            raise Exception("Sleep time must be greater than or equal to 0 seconds.")
+        self.sleep_time = sleep_t
+        
+        if repeat < 0:
+            raise Exception("Number of repeats must be greater than or equal to 0.")
+        self.repeat = repeat
         self.data = []
 
-    #set header for output
     def _set_header(self):
+        """Set header for data output"""
         if self.units == "Imperial" or self.units == "Mixed 2":
             self.header = ["Temperature in F"]
         else:
             self.header = ["Temperature in C"]
         
-    #take sensor reading
     def takeReading(self):
+        """Take sensor reading. Returns reading data as an array."""
         reading_data = []
         return reading_data
 
-    #output readings to CSV file
     def recordToFile(self):
+        """Records sensor readings to csv files with single header line."""
         filename = f"{self.name}.csv"
 
         #create csv writer object and add the specified header
@@ -62,9 +76,8 @@ class Sensor:
                     sensor_writer.writerow(self.data)
                     time.sleep(self.sleep_time)
 
-    #print readings to console
     def printToConsole(self):
-        print(self.name + self.units)
+        """Prints sensor readings to console with a single header line."""
         print(self.header)
         if self.repeat == 0:
             #continually take sensor readings, print to the console, then sleep for specified interval
