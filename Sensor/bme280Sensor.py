@@ -4,16 +4,26 @@
 #CCofCO RockSat-X 2024
 #---------------------
 
-import Sensor
+import sensor
 import qwiic_bme280
 
 
-class BME280Sensor(Sensor):
+class BME280Sensor(sensor):
     """Class for the Sparkfun BME280 atmospheric sensor."""
 
-    def __init__(self, name, filter=1, standby=0, temp_oversample=1, pressure_oversample=1, humidity_oversample=1, units="Imperial", sleep_t=1, repeat = 0):
+    def __init__(self, name, units="Imperial", sleep_t=1.0, repeat = 0, filter=1, standby=0, temp_oversample=1, pressure_oversample=1, humidity_oversample=1):
         """Create and initialize a BME280 sensor object. 
         param: string name: The sensor name.
+        param: string units: The units of sensor outputs. Default is Imperial.
+                            Valid options:
+                            Imperial: Fahrenheit, feet
+                            Metric: Celsius, meters
+                            Mixed 1: Celsius, feet
+                            Mixed 2: Fahrenheit, meters
+        param: float sleep_t: The amount of time between sequential sensor reads. 
+                              Default is 1 second.
+        param: int repeat: The number of times to repeat readings. 0 indicates continual readings. 
+                           Default is 0.
         param: int filter: The filter coefficient which sets the level of noise reduction.
                             0 to 4 are valid values. The default is 1.
                             0 = filter off
@@ -37,16 +47,6 @@ class BME280Sensor(Sensor):
                                         1 to 16 are valid values. Default is 1.
         param: int humidity_oversample: The humidity oversampling value.
                                         1 to 16 are valid values. Default is 1.
-        param: string units: The units of sensor outputs. Default is Imperial.
-                            Valid options:
-                            Imperial: Fahrenheit, feet
-                            Metric: Celsius, meters
-                            Mixed 1: Celsius, feet
-                            Mixed 2: Fahrenheit, meters
-        param: float sleep_t: The amount of time between sequential sensor reads. 
-                              Default is 1 second.
-        param: int repeat: The number of times to repeat readings. 0 indicates continual readings. 
-                           Default is 0.
         BME280 is hard coded to normal mode for continuous sensor readings.
         """
 
@@ -82,20 +82,23 @@ class BME280Sensor(Sensor):
         else:
             raise Exception("Invalid humidity oversampling value. Valid values are 1 to 16.")
 
-        bme280.mode = bme280.MODE_NORMAL # Normal mode takes continuous readings - 
+        bme280.mode = bme280.MODE_NORMAL # Normal mode takes continuous readings - no other modes supported
 
         self.repeat = repeat
 
     def _set_header(self):
         """Sets header for outputs"""
-        if self.units == "Imperial":
-            self.header = ["Temperature in F", "Altitude in feet", "Pressure", "Humidity"]
-        elif self.units == "Metric":
-            self.header = ["Temperature in C", "Altitude in meters", "Pressure", "Humidity"]
-        elif self.units == "Mixed 1":
-            self.header = ["Temperature in C", "Altitude in feet", "Pressure", "Humidity"]
+        if self.units == "Imperial" or self.units == "Mixed 2":
+            self.header = ["Temperature in F"]
         else:
-            self.header = ["Temperature in F", "Altitude in meters", "Pressure", "Humidity"]
+            self.header = ["Temperature in C"]
+
+        if self.units == "Imperial" or self.units == "Mixed 1":
+            self.header.append("Altitude in Feet")
+        else:
+            self.header.append("Altitude in meters")
+        self.header.append("Pressure")
+        self.header.append("Humidity")
 
     def takeReading(self):
         """Take sensor reading. Returns reading data as an array."""
