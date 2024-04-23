@@ -1,5 +1,6 @@
 #---------------------
 #Star Tracker Class using Raspberry Pi HD camera and 5V servo motor for imaging and LOST software for image proccessing
+#Servo motion controls using native GPIO or Adafruit servo/PWM hat. Camera controls using Picamera
 #Created by Mallory Shaloy 4/2024
 #CCofCO RockSat-X 2024
 #---------------------
