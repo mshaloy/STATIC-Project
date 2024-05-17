@@ -27,39 +27,41 @@ def runSensor_console(sensor):
     _sensor.takeReading()
     _sensor.printToConsole()
     
-def runExperiment():
+def runExperiment(regolith, star_tracker):
     #begin regolith sequence
-        regolith = Activation()
-        regolith.eventActivation(5, 26, 180)        #listening for TE-2 on GPIO 5; activating GPIO 26 for 180 seconds
+    
+    regolith.eventActivation(5, 26, 180)        #listening for TE-2 on GPIO 5; activating GPIO 26 for 180 seconds
 
-        #initiate star tracker sequence
-        star_tracker = StarTracker(25)
-        angle = -120.0       #initial angle is -120 degrees to account for angle adjustment interaction with looping
-        image_number = 0    #inital image number
+    #initiate star tracker sequence
+    
+    angle = -120.0       #initial angle is -120 degrees to account for angle adjustment interaction with looping
+    image_number = 0    #inital image number
 
-        #take 3 images at each of 3 star tracker locations; repeat 3 times
+    #take 3 images at each of 3 star tracker locations; repeat 3 times
+    for i in range(3):
+        angle = -120
         for i in range(3):
-            angle = -120
+            angle += 60		#adjust camera angle through 3 locations -60, 0, and 60 degrees
+            star_tracker.moveCamera(angle)
             for i in range(3):
-                angle += 60		#adjust camera angle through 3 locations -60, 0, and 60 degrees
-                star_tracker.moveCamera(angle)
-                for i in range(3):
-                    star_tracker.takePicture(image_number)
-                    image_number += 1		#increment image number on captured images
+                star_tracker.takePicture(image_number)
+                image_number += 1		#increment image number on captured images
             
 
-        #LOST software calculations
-        star_tracker.trackerCalculation(image_number)
+    #LOST software calculations
+    star_tracker.trackerCalculation(image_number)
         
 if __name__ == "__main__":
     try:
         i2c = busio.I2C(board.SCL, board.SDA)	#setup i2c interface
         ads = ADS.ADS1115(i2c)              # setup analog to digital converter board
-        bme = BME280Sensor("BME", "Metric", 0.1, 10)        # Set up BME280 sensor; Will take readings continuously every 0.1 seconds
+        bme = BME280Sensor("BME", "Metric", 0.2, 10)        # Set up BME280 sensor; Will take readings continuously every 0.1 seconds
         tmp = TMP36Sensor("TMP", ads, "Metric", 0.1, 1, 10)      # Set up TMP36 sensor; Will take readings continuously every 0.1 seconds
+        regolith = Activation()
+        star_tracker = StarTracker(25)
         t1 = multiprocessing.Process(target=runSensor_file(bme))    #assigning running bme280 sensor to process 1 (number for id purposes only)
         t2 = multiprocessing.Process(target=runSensor_file(tmp))    #assigning running tmp36 sensor to process 2 (number for id purposes only)
-        t3 = multiprocessing.Process(target=runExperiment())		#assigning running experiment functions to process 3 (number for id purposes only)
+        t3 = multiprocessing.Process(target=runExperiment(regolith, star_tracker))		#assigning running experiment functions to process 3 (number for id purposes only)
 
         #starting individual proccesses. One sensor per process plus experiment sequence on one proccess.
         t1.start()
